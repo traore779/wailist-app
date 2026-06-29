@@ -1,0 +1,4 @@
+# Fichier pour le développement local avec `wrangler dev`
+# NE PAS committer dans Git (déjà dans .gitignore)
+
+ADMIN_PASSWORD="changeme-local"

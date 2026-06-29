@@ -1,0 +1,21 @@
+{
+  "name": "waitlist-worker",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:migrate": "wrangler d1 migrations apply waitlist-db",
+    "db:migrate:remote": "wrangler d1 migrations apply waitlist-db --remote",
+    "db:count": "wrangler d1 execute waitlist-db --command \"SELECT COUNT(*) FROM waitlist\"",
+    "cf-typegen": "wrangler types"
+  },
+  "dependencies": {
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241022.0",
+    "typescript": "^5.5.2",
+    "wrangler": "^3.80.0"
+  }
+}

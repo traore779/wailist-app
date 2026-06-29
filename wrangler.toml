@@ -1,0 +1,24 @@
+name = "waitlist-worker"
+main = "src/index.tsx"
+compatibility_date = "2024-10-22"
+compatibility_flags = ["nodejs_compat"]
+
+# Static assets (CSS, JS, images)
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "waitlist-db"
+database_id = "ca4214a6-5fc1-49f4-a8d5-645a0405b99b"
+
+# KV for rate limiting
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "1fc8243d7ac1438ab33e5d8c6bc0b714"
+
+[vars]
+ADMIN_USERNAME = "admin"
+# Set ADMIN_PASSWORD as a secret: wrangler secret put ADMIN_PASSWORD

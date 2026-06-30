@@ -9,3 +9,7 @@ export async function getVisitorCount(kv: KVNamespace, url: string): Promise<num
   const { keys } = await kv.list({ prefix: `${PREFIX}${url}:` });
   return keys.length;
 }
+
+export async function removeVisitor(kv: KVNamespace, url: string, sessionId: string): Promise<void> {
+  await kv.delete(`${PREFIX}${url}:${sessionId}`);
+}

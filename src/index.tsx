@@ -9,7 +9,7 @@ import {
   getCount, getStats, getRecent,
   exportAll, insertEmail, isValidEmail,
 } from "./lib/db";
-import { trackVisitor, getVisitorCount } from "./lib/visitors";
+import { trackVisitor, getVisitorCount, removeVisitor } from "./lib/visitors";
 import { HomePage } from "./components/HomePage";
 import { LoginPage } from "./components/LoginPage";
 import { AdminPage } from "./components/AdminPage";
@@ -84,6 +84,21 @@ app.get("/api/visitors", async (c) => {
 
   const visitors = await getVisitorCount(c.env.RATE_LIMIT_KV, "/");
   return c.json({ visitors });
+});
+
+app.post("/api/leave", async (c) => {
+  let body: { sessionId?: string; url?: string };
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({}, 400);
+  }
+
+  const sessionId = (body.sessionId ?? "").slice(0, 64);
+  const url = (body.url ?? "/").slice(0, 200);
+
+  if (sessionId) await removeVisitor(c.env.RATE_LIMIT_KV, url, sessionId);
+  return c.json({});
 });
 
 app.post("/api/ping", async (c) => {

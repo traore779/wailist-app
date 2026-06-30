@@ -39,9 +39,50 @@ const adminStyles = `
 
   .stat-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
     margin-bottom: 32px;
+  }
+
+  .live-section {
+    margin-bottom: 32px;
+  }
+
+  .live-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(52, 211, 153, 0.2);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .live-dot {
+    width: 10px;
+    height: 10px;
+    background: var(--success);
+    border-radius: 50%;
+    flex-shrink: 0;
+    animation: blink-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes blink-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .live-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--success);
+    line-height: 1;
+  }
+
+  .live-label {
+    font-size: .82rem;
+    color: var(--text-muted);
+    margin-top: 3px;
   }
 
   .stat-card {
@@ -181,6 +222,7 @@ const adminStyles = `
 
   @media (max-width: 768px) {
     .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .live-card { padding: 16px; }
   }
 
   @media (max-width: 576px) {
@@ -225,10 +267,17 @@ export function AdminPage({ stats, recent, visitors }: { stats: WaitlistStats; r
               <div class="stat-value">{stats.last7days}</div>
               <div class="stat-label">7 derniers jours</div>
             </div>
+          </div>
 
-            <div class="stat-card">
-              <div class="stat-value" id="visitors-live" style="color:var(--success);">{visitors}</div>
-              <div class="stat-label">Visiteurs en ce moment</div>
+          <p class="section-title">Trafic en direct</p>
+
+          <div class="live-section">
+            <div class="live-card">
+              <span class="live-dot"></span>
+              <div>
+                <div class="live-value" id="visitors-live">{visitors}</div>
+                <div class="live-label" id="visitors-label">visiteur{visitors !== 1 ? "s" : ""} sur la page en ce moment</div>
+              </div>
             </div>
           </div>
 
@@ -282,16 +331,22 @@ export function AdminPage({ stats, recent, visitors }: { stats: WaitlistStats; r
         </div>
         <script dangerouslySetInnerHTML={{ __html: `
           (function () {
-            var el = document.getElementById("visitors-live");
-            if (!el) return;
-            setInterval(async function () {
+            var count = document.getElementById("visitors-live");
+            var label = document.getElementById("visitors-label");
+            if (!count) return;
+            async function refresh() {
               try {
                 var res = await fetch("/api/visitors");
                 if (!res.ok) return;
                 var data = await res.json();
-                if (typeof data.visitors === "number") el.textContent = data.visitors;
+                if (typeof data.visitors === "number") {
+                  count.textContent = data.visitors;
+                  if (label) label.textContent = data.visitors !== 1 ? "visiteurs sur la page en ce moment" : "visiteur sur la page en ce moment";
+                }
               } catch {}
-            }, 10000);
+            }
+            refresh();
+            setInterval(refresh, 10000);
           })();
         ` }} />
       </body>

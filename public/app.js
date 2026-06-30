@@ -180,8 +180,22 @@
     } catch {}
   }
 
+  function leave() {
+    navigator.sendBeacon(
+      "/api/leave",
+      new Blob([JSON.stringify({ sessionId, url: location.pathname })], { type: "application/json" })
+    );
+  }
+
   ping();
   setInterval(ping, 10_000);
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) leave();
+    else ping();
+  });
+
+  window.addEventListener("beforeunload", leave);
 
   connectWS();
 })();

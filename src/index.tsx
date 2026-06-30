@@ -183,6 +183,18 @@ app.get("/admin", async (c) => {
   return c.html(<AdminPage stats={stats} recent={recent} visitors={visitors} />);
 });
 
+app.get("/api/admin/recent", async (c) => {
+  const redirect = await requireSession(c.req.raw, c.env.JWT_SECRET);
+  if (redirect) return c.json({ error: "unauthorized" }, 401);
+
+  const [stats, recent] = await Promise.all([
+    getStats(c.env.DB),
+    getRecent(c.env.DB, 20),
+  ]);
+
+  return c.json({ stats, recent });
+});
+
 app.get("/api/export/csv", async (c) => {
   const redirect = await requireSession(c.req.raw, c.env.JWT_SECRET);
   if (redirect) return redirect;

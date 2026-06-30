@@ -254,17 +254,17 @@ export function AdminPage({ stats, recent, visitors }: { stats: WaitlistStats; r
 
           <div class="stat-grid">
             <div class="stat-card accent">
-              <div class="stat-value">{stats.total}</div>
+              <div class="stat-value" id="stat-total">{stats.total}</div>
               <div class="stat-label">Total inscrits</div>
             </div>
 
             <div class="stat-card">
-              <div class="stat-value">{stats.today}</div>
+              <div class="stat-value" id="stat-today">{stats.today}</div>
               <div class="stat-label">Aujourd'hui</div>
             </div>
 
             <div class="stat-card">
-              <div class="stat-value">{stats.last7days}</div>
+              <div class="stat-value" id="stat-week">{stats.last7days}</div>
               <div class="stat-label">7 derniers jours</div>
             </div>
           </div>
@@ -304,7 +304,7 @@ export function AdminPage({ stats, recent, visitors }: { stats: WaitlistStats; r
                   <th>Date</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody id="admin-tbody">
                 {recent.length === 0 ? (
                   <tr>
                     <td colspan={4} class="empty-cell">Aucune inscription pour le moment.</td>
@@ -323,18 +323,17 @@ export function AdminPage({ stats, recent, visitors }: { stats: WaitlistStats; r
             </table>
           </div>
 
-          {stats.total > 20 && (
-            <p style="font-size:.8rem;color:var(--text-muted);text-align:center;">
-              Affichage des 20 derniers sur {stats.total}. Téléchargez le CSV pour la liste complète.
-            </p>
-          )}
+          <p id="more-info" style={`font-size:.8rem;color:var(--text-muted);text-align:center;${stats.total > 20 ? "" : "display:none;"}`}>
+            Affichage des 20 derniers sur <span id="more-info-total">{stats.total}</span>. Téléchargez le CSV pour la liste complète.
+          </p>
         </div>
         <script dangerouslySetInnerHTML={{ __html: `
           (function () {
             var count = document.getElementById("visitors-live");
             var label = document.getElementById("visitors-label");
-            if (!count) return;
-            async function refresh() {
+
+            async function refreshVisitors() {
+              if (!count) return;
               try {
                 var res = await fetch("/api/visitors");
                 if (!res.ok) return;
@@ -345,8 +344,74 @@ export function AdminPage({ stats, recent, visitors }: { stats: WaitlistStats; r
                 }
               } catch {}
             }
-            refresh();
-            setInterval(refresh, 10000);
+
+            var statTotal = document.getElementById("stat-total");
+            var statToday = document.getElementById("stat-today");
+            var statWeek = document.getElementById("stat-week");
+            var tbody = document.getElementById("admin-tbody");
+            var moreInfo = document.getElementById("more-info");
+            var moreInfoTotal = document.getElementById("more-info-total");
+
+            function renderRow(r) {
+              var tr = document.createElement("tr");
+
+              var tdId = document.createElement("td");
+              tdId.style.color = "var(--text-muted)";
+              tdId.style.fontSize = ".8rem";
+              tdId.textContent = r.id;
+
+              var tdEmail = document.createElement("td");
+              tdEmail.className = "email-cell";
+              tdEmail.textContent = r.email;
+
+              var tdName = document.createElement("td");
+              tdName.textContent = r.name || "—";
+
+              var tdDate = document.createElement("td");
+              tdDate.style.fontSize = ".82rem";
+              tdDate.textContent = r.created_at;
+
+              tr.append(tdId, tdEmail, tdName, tdDate);
+              return tr;
+            }
+
+            async function refreshList() {
+              if (!tbody) return;
+              try {
+                var res = await fetch("/api/admin/recent");
+                if (!res.ok) return;
+                var data = await res.json();
+
+                if (statTotal) statTotal.textContent = data.stats.total;
+                if (statToday) statToday.textContent = data.stats.today;
+                if (statWeek) statWeek.textContent = data.stats.last7days;
+
+                if (moreInfo) {
+                  moreInfo.style.display = data.stats.total > 20 ? "" : "none";
+                  if (moreInfoTotal) moreInfoTotal.textContent = data.stats.total;
+                }
+
+                tbody.innerHTML = "";
+                if (data.recent.length === 0) {
+                  var tr = document.createElement("tr");
+                  var td = document.createElement("td");
+                  td.colSpan = 4;
+                  td.className = "empty-cell";
+                  td.textContent = "Aucune inscription pour le moment.";
+                  tr.appendChild(td);
+                  tbody.appendChild(tr);
+                } else {
+                  data.recent.forEach(function (r) {
+                    tbody.appendChild(renderRow(r));
+                  });
+                }
+              } catch {}
+            }
+
+            refreshVisitors();
+            refreshList();
+            setInterval(refreshVisitors, 10000);
+            setInterval(refreshList, 10000);
           })();
         ` }} />
       </body>

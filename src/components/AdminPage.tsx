@@ -119,8 +119,14 @@ const adminStyles = `
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    overflow: hidden;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     margin-bottom: 32px;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    white-space: nowrap;
   }
 
   .btn-export {

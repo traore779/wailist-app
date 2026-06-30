@@ -5,10 +5,10 @@ import { IconLightning, IconLock, IconTarget } from "./icons";
 export function HomePage({ count }: { count: number }) {
   return (
     <html lang="fr">
-      <head>{baseHead("Liste d'attente — Votre Produit")}</head>
+      <head>{baseHead("Liste d'attente — Baobab")}</head>
       <body>
         <section class="hero-section d-flex align-items-center justify-content-center min-vh-100">
-          <div class="container text-center px-4">
+          <div class="container text-center px-4 pt-4">
             <div class="eyebrow mb-4">
               <span class="badge-pill">Accès anticipé</span>
             </div>
@@ -81,7 +81,7 @@ export function HomePage({ count }: { count: number }) {
         </section>
 
         <footer class="footer-section py-4 text-center">
-          <p class="footer-text">© {new Date().getFullYear()} Votre Produit. Tous droits réservés.</p>
+          <p class="footer-text">© {new Date().getFullYear()} Baobab. Tous droits réservés.</p>
         </footer>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>

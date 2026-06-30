@@ -9,7 +9,7 @@ Page d'inscription à une liste d'attente — Cloudflare Workers + Hono + D1.
 | Runtime | Cloudflare Workers |
 | Framework | [Hono](https://hono.dev) + JSX |
 | Base de données | Cloudflare D1 (SQLite) |
-| Rate limiting | Cloudflare KV |
+| Rate limiting & présence | Cloudflare KV |
 | Assets statiques | Cloudflare Static Assets Binding |
 | CSS | Bootstrap 5.3 + CSS custom |
 | CI/CD | GitHub Actions |
@@ -23,6 +23,7 @@ Page d'inscription à une liste d'attente — Cloudflare Workers + Hono + D1.
 - Compteur d'inscrits en temps réel via WebSocket
 - Animation du compteur à chaque inscription
 - Panel admin protégé par session JWT (cookie HttpOnly)
+- Compteur de visiteurs en direct dans l'admin (heartbeat KV, TTL 90s, départ instantané via `sendBeacon`)
 - Export CSV de tous les inscrits
 - CI/CD via GitHub Actions (migrations + deploy)
 
@@ -173,6 +174,30 @@ Push sur main
 
 WebSocket — envoie `{ "count": 42 }` à la connexion puis à chaque ping client.
 
+### `POST /api/ping`
+
+Heartbeat visiteur — enregistre la présence dans KV (TTL 90s). Appelé toutes les 10s par le client.
+
+```json
+{ "sessionId": "uuid", "url": "/" }
+```
+
+### `POST /api/leave`
+
+Signal de départ — supprime immédiatement la clé KV du visiteur. Envoyé via `sendBeacon` à la fermeture de l'onglet.
+
+```json
+{ "sessionId": "uuid", "url": "/" }
+```
+
+### `GET /api/visitors` — session requise
+
+Retourne le nombre de visiteurs actifs sur une URL.
+
+```json
+{ "visitors": 3 }
+```
+
 ### `GET /api/export/csv` — session requise
 
 Accessible uniquement après connexion sur `/login`. Télécharge tous les inscrits au format CSV.
@@ -220,13 +245,14 @@ waitlist-worker/
 │   │   └── AdminPage.tsx      # Dashboard admin
 │   ├── lib/
 │   │   ├── db.ts              # Requêtes D1
-│   │   └── ratelimit.ts       # Rate limiting KV
+│   │   ├── ratelimit.ts       # Rate limiting KV
+│   │   └── visitors.ts        # Compteur de visiteurs en direct (KV heartbeat)
 │   ├── middleware/
 │   │   └── auth.ts            # Session JWT (cookie HttpOnly)
 │   └── index.tsx              # Routes Hono
 ├── public/
 │   ├── style.css              # Thème dark + Bootstrap
-│   └── app.js                 # Client JS (form, WebSocket, animations)
+│   └── app.js                 # Client JS (form, WebSocket, animations, heartbeat visiteur)
 ├── migrations/
 │   └── 0001_create_waitlist.sql
 ├── .github/

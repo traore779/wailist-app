@@ -160,5 +160,28 @@
     counterEl.textContent = currentCount.toLocaleString("fr-FR");
   }
 
+  const sessionId = (() => {
+    const key = "wl_sid";
+    let id = sessionStorage.getItem(key);
+    if (!id) {
+      id = crypto.randomUUID();
+      sessionStorage.setItem(key, id);
+    }
+    return id;
+  })();
+
+  async function ping() {
+    try {
+      await fetch("/api/ping", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, url: location.pathname }),
+      });
+    } catch {}
+  }
+
+  ping();
+  setInterval(ping, 10_000);
+
   connectWS();
 })();

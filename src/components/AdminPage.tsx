@@ -39,7 +39,7 @@ const adminStyles = `
 
   .stat-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 16px;
     margin-bottom: 32px;
   }
@@ -179,13 +179,17 @@ const adminStyles = `
     padding: 32px !important;
   }
 
+  @media (max-width: 768px) {
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
   @media (max-width: 576px) {
     .stat-grid { grid-template-columns: 1fr; }
     .admin-header { flex-direction: column; align-items: flex-start; }
   }
 `;
 
-export function AdminPage({ stats, recent }: { stats: WaitlistStats; recent: WaitlistEntry[] }) {
+export function AdminPage({ stats, recent, visitors }: { stats: WaitlistStats; recent: WaitlistEntry[]; visitors: number }) {
   return (
     <html lang="fr">
       <head>
@@ -220,6 +224,11 @@ export function AdminPage({ stats, recent }: { stats: WaitlistStats; recent: Wai
             <div class="stat-card">
               <div class="stat-value">{stats.last7days}</div>
               <div class="stat-label">7 derniers jours</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-value" id="visitors-live" style="color:var(--success);">{visitors}</div>
+              <div class="stat-label">Visiteurs en ce moment</div>
             </div>
           </div>
 
@@ -271,6 +280,20 @@ export function AdminPage({ stats, recent }: { stats: WaitlistStats; recent: Wai
             </p>
           )}
         </div>
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function () {
+            var el = document.getElementById("visitors-live");
+            if (!el) return;
+            setInterval(async function () {
+              try {
+                var res = await fetch("/api/visitors");
+                if (!res.ok) return;
+                var data = await res.json();
+                if (typeof data.visitors === "number") el.textContent = data.visitors;
+              } catch {}
+            }, 10000);
+          })();
+        ` }} />
       </body>
     </html>
   );

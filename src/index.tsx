@@ -9,6 +9,7 @@ import {
   getCount, getStats, getRecent,
   exportAll, insertEmail, isValidEmail,
 } from "./lib/db";
+import { trackVisitor, getVisitorCount } from "./lib/visitors";
 import { HomePage } from "./components/HomePage";
 import { LoginPage } from "./components/LoginPage";
 import { AdminPage } from "./components/AdminPage";
@@ -77,6 +78,33 @@ app.get("/api/count", async (c) => {
   return c.json({ count });
 });
 
+app.get("/api/visitors", async (c) => {
+  const redirect = await requireSession(c.req.raw, c.env.JWT_SECRET);
+  if (redirect) return c.json({ visitors: 0 }, 401);
+
+  const visitors = await getVisitorCount(c.env.RATE_LIMIT_KV, "/");
+  return c.json({ visitors });
+});
+
+app.post("/api/ping", async (c) => {
+  let body: { sessionId?: string; url?: string };
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ visitors: 0 }, 400);
+  }
+
+  const sessionId = (body.sessionId ?? "").slice(0, 64);
+  const url = (body.url ?? "/").slice(0, 200);
+
+  if (!sessionId) return c.json({ visitors: 0 }, 400);
+
+  await trackVisitor(c.env.RATE_LIMIT_KV, url, sessionId);
+  const visitors = await getVisitorCount(c.env.RATE_LIMIT_KV, url);
+
+  return c.json({ visitors });
+});
+
 app.get("/api/ws", async (c) => {
   if (c.req.header("Upgrade") !== "websocket") {
     return c.text("WebSocket upgrade required", 426);
@@ -131,12 +159,13 @@ app.get("/admin", async (c) => {
   const redirect = await requireSession(c.req.raw, c.env.JWT_SECRET);
   if (redirect) return redirect;
 
-  const [stats, recent] = await Promise.all([
+  const [stats, recent, visitors] = await Promise.all([
     getStats(c.env.DB),
     getRecent(c.env.DB, 20),
+    getVisitorCount(c.env.RATE_LIMIT_KV, "/"),
   ]);
 
-  return c.html(<AdminPage stats={stats} recent={recent} />);
+  return c.html(<AdminPage stats={stats} recent={recent} visitors={visitors} />);
 });
 
 app.get("/api/export/csv", async (c) => {

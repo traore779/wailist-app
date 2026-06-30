@@ -57,6 +57,7 @@ export function HomePage({ count }: { count: number }) {
               <div class="counter-label">personnes sur la liste d'attente</div>
               <div class="counter-pulse" id="counter-pulse"></div>
             </div>
+
           </div>
         </section>
 
